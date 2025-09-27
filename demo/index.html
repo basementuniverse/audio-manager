@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudioManager Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 15px;
+            background: #007cba;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #005a87;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+        input[type="range"] {
+            width: 100px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AudioManager Demo</h1>
+
+    <div class="section">
+        <h2>Setup</h2>
+        <p>Click "Initialize AudioManager" to start the demo. This will load the provided sound files and demonstrate both HTMLAudioElement and AudioBuffer modes.</p>
+        <button id="initBtn">Initialize AudioManager</button>
+        <div id="status">Not initialized</div>
+
+        <h3>Demo Features:</h3>
+        <ul>
+            <li><strong>HTMLAudioElement mode:</strong> Uses standard HTML5 audio elements for the music, rain, and coin sounds</li>
+            <li><strong>AudioBuffer mode:</strong> Uses Web Audio API AudioBuffer for the generated sine wave</li>
+            <li><strong>Different play modes:</strong> Trigger (play once), Retrigger (restart if playing), Hold (play while held)</li>
+            <li><strong>Real-time controls:</strong> Volume, pan, pitch adjustment for all sounds</li>
+            <li><strong>Fade effects:</strong> Fade in/out capabilities</li>
+        </ul>
+    </div>
+
+    <div class="section" id="soundControls" style="display: none;">
+        <h2>Sound Controls</h2>
+        <p><strong>HTMLAudioElement sounds (loaded from audio files):</strong></p>
+        <div class="controls">
+            <button onclick="playSound('rainSound')">🌧️ Play Rain (Retrigger mode - restarts if already playing, loops)</button>
+            <button onclick="toggleHoldCoinSound()">🪙 Toggle Coin Sound (Hold mode - plays while button is "held")</button>
+        </div>
+        <p><strong>AudioBuffer sounds:</strong></p>
+        <div class="controls">
+            <button onclick="playSound('musicSound')">🎵 Play Music (AudioBuffer from file - Trigger mode)</button>
+            <button onclick="playSound('sineWave')">🔊 Play Sine Wave (AudioBuffer generated - demonstrates Web Audio API)</button>
+        </div>
+        <p><strong>Effects:</strong></p>
+        <div class="controls">
+            <button onclick="AudioManager.fadeIn('musicSound', 2)">Fade In Music (2s)</button>
+            <button onclick="AudioManager.fadeOut('musicSound', 2)">Fade Out Music (2s)</button>
+        </div>
+    </div>
+
+    <div class="section" id="globalControls" style="display: none;">
+        <h2>Global Controls</h2>
+        <p>These controls affect all sounds that don't belong to a specific group:</p>
+        <div class="controls">
+            <label>Volume: <input type="range" id="volumeSlider" min="0" max="2" step="0.1" value="1"></label>
+            <span id="volumeValue">1.0</span>
+        </div>
+        <div class="controls">
+            <label>Pan: <input type="range" id="panSlider" min="-1" max="1" step="0.1" value="0"></label>
+            <span id="panValue">0.0</span>
+        </div>
+        <div class="controls">
+            <label>Pitch: <input type="range" id="pitchSlider" min="0.5" max="2" step="0.1" value="1"></label>
+            <span id="pitchValue">1.0</span>
+        </div>
+        <div class="controls">
+            <button onclick="AudioManager.pauseAll()">Pause All</button>
+            <button onclick="AudioManager.resumeAll()">Resume All</button>
+            <button onclick="AudioManager.stopAll()">Stop All</button>
+            <button onclick="AudioManager.resetAll()">Reset All</button>
+        </div>
+    </div>
+
+    <div class="section" id="soundStatus" style="display: none;">
+        <h2>Sound Status</h2>
+        <p>Open the browser console (F12) to see detailed logging of sound events (start, finish, etc.)</p>
+        <div id="statusDisplay">
+            <p><strong>Groups:</strong></p>
+            <ul>
+                <li><strong>No group:</strong> Music sound (AudioBuffer), Sine wave (AudioBuffer)</li>
+                <li><strong>Ambient group:</strong> Rain sound (HTMLAudioElement)</li>
+                <li><strong>Effects group:</strong> Coin sound (HTMLAudioElement)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import AudioManager (in a real implementation, you'd import from your built module)
+        // For demo purposes, we'll include the AudioManager code inline or load it separately
+
+        document.getElementById('initBtn').addEventListener('click', initializeAudioManager);
+
+        // Set up sliders
+        const volumeSlider = document.getElementById('volumeSlider');
+        const panSlider = document.getElementById('panSlider');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const panValue = document.getElementById('panValue');
+        const pitchValue = document.getElementById('pitchValue');
+
+        volumeSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            volumeValue.textContent = value.toFixed(1);
+            if (window.AudioManager) {
+                AudioManager.setVolume(value);
+            }
+        });
+
+        panSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            panValue.textContent = value.toFixed(1);
+            if (window.AudioManager) {
+                AudioManager.setPan(value);
+            }
+        });
+
+        pitchSlider.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            pitchValue.textContent = value.toFixed(1);
+            if (window.AudioManager) {
+                AudioManager.setPitch(value);
+            }
+        });
+
+        async function loadAudioBuffer(url) {
+            try {
+                const response = await fetch(url);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                return audioBuffer;
+            } catch (error) {
+                console.error('Error loading audio buffer:', error);
+                throw error;
+            }
+        }
+
+        async function initializeAudioManager() {
+            try {
+                document.getElementById('status').textContent = 'Loading audio files...';
+
+                // Load HTMLAudioElement sounds
+                const rainAudio = new Audio('486266__craigsmith__r23-33-raining-from-inside.wav');
+                const coinAudio = new Audio('pickupCoin.wav');
+
+                // Load AudioBuffers
+                const musicBuffer = await loadAudioBuffer('244532__xtrgamr__music-game-dun-1.wav');
+                const sineWaveBuffer = await createSineWaveBuffer(440, 1.5); // 440Hz for 1.5 seconds
+
+                // Wait for HTML audio elements to be ready
+                await Promise.all([
+                    new Promise((resolve, reject) => {
+                        rainAudio.addEventListener('canplaythrough', resolve, { once: true });
+                        rainAudio.addEventListener('error', reject, { once: true });
+                        rainAudio.load();
+                    }),
+                    new Promise((resolve, reject) => {
+                        coinAudio.addEventListener('canplaythrough', resolve, { once: true });
+                        coinAudio.addEventListener('error', reject, { once: true });
+                        coinAudio.load();
+                    })
+                ]);
+
+                document.getElementById('status').textContent = 'Initializing AudioManager...';
+
+                // Initialize AudioManager with real audio files
+                window.AudioManager.initialise({
+                    musicSound: {
+                        audio: musicBuffer,
+                        mode: 'trigger',
+                        volume: 0.6,
+                        onStart: () => console.log('Music (AudioBuffer) started'),
+                        onFinish: () => console.log('Music (AudioBuffer) finished')
+                    },
+                    rainSound: {
+                        audio: rainAudio,
+                        mode: 'retrigger',
+                        volume: 0.4,
+                        group: 'ambient',
+                        loop: true
+                    },
+                    coinSound: {
+                        audio: coinAudio,
+                        mode: 'hold',
+                        volume: 0.8,
+                        group: 'effects'
+                    },
+                    sineWave: {
+                        audio: sineWaveBuffer,
+                        mode: 'trigger',
+                        volume: 0.3,
+                        onStart: () => console.log('Sine wave (AudioBuffer) started'),
+                        onFinish: () => console.log('Sine wave (AudioBuffer) finished')
+                    }
+                });
+
+                document.getElementById('status').textContent = 'AudioManager initialized! Ready to play sounds.';
+                document.getElementById('soundControls').style.display = 'block';
+                document.getElementById('globalControls').style.display = 'block';
+                document.getElementById('soundStatus').style.display = 'block';
+                document.getElementById('initBtn').disabled = true;
+            } catch (error) {
+                document.getElementById('status').textContent = 'Error: ' + error.message;
+                console.error('Initialization error:', error);
+            }
+        }
+
+        async function createSineWaveBuffer(frequency, duration) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const sampleRate = audioContext.sampleRate;
+            const samples = Math.floor(sampleRate * duration);
+
+            const audioBuffer = audioContext.createBuffer(1, samples, sampleRate);
+            const channelData = audioBuffer.getChannelData(0);
+
+            for (let i = 0; i < samples; i++) {
+                channelData[i] = Math.sin(2 * Math.PI * frequency * i / sampleRate) * 0.3;
+            }
+
+            return audioBuffer;
+        }
+
+
+
+        window.playSound = function(soundName) {
+            if (window.AudioManager) {
+                AudioManager.play(soundName);
+            }
+        };
+
+        let coinSoundActive = false;
+
+        window.toggleHoldCoinSound = function() {
+            if (window.AudioManager) {
+                coinSoundActive = !coinSoundActive;
+                AudioManager.sounds.coinSound.hold = coinSoundActive;
+                document.querySelector('[onclick="toggleHoldCoinSound()"]').textContent =
+                    coinSoundActive ? 'Stop Coin Sound' : 'Start Coin Sound';
+            }
+        };
+    </script>
+
+    <script src="../build/index.js"></script>
+
+    <p>
+      <strong>Note:</strong> This demo demonstrates both HTMLAudioElement and AudioBuffer modes of the AudioManager.
+      The rain and coin sounds use HTMLAudioElement, while the music and sine wave use AudioBuffer.
+    </p>
+
+    <p><strong>Attribution:</strong>
+      <ul>
+        <li>R23-33-Raining from Inside.wav by craigsmith -- https://freesound.org/s/486266/ -- License: Creative Commons 0</li>
+        <li>music game, dun 1.wav by xtrgamr -- https://freesound.org/s/244532/ -- License: Attribution 4.0</li>
+      </ul>
+    </p>
+</body>
+</html>
