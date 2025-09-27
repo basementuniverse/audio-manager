@@ -17,9 +17,6 @@
     "build": "webpack",
     "watch": "webpack --watch"
   },
-  "dependencies": {
-    "@basementuniverse/utils": "^1.7.0"
-  },
   "devDependencies": {
     "@types/node": "^18.11.12",
     "clean-webpack-plugin": "^4.0.0-alpha.0",
