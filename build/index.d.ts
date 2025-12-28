@@ -140,6 +140,20 @@ export declare class AudioManager {
 /**
  * Content Manager Loader for loading an audio file as an AudioBuffer
  *
+ * Note: This loader requires a web server (http/https) to work properly due to
+ * browser security restrictions. For loading audio from the local filesystem
+ * (file://), use AudioElementLoader instead.
+ *
  * @see https://www.npmjs.com/package/@basementuniverse/content-manager
  */
 export declare const AudioBufferLoader: (url: string) => Promise<AudioBuffer>;
+/**
+ * Content Manager Loader for loading an audio file as an HTMLAudioElement
+ *
+ * Note: This loader works reliably with both web servers (http/https) and local
+ * filesystem (file://), similar to how the ImageLoader works. Use this loader
+ * when you need to load audio files from the local filesystem.
+ *
+ * @see https://www.npmjs.com/package/@basementuniverse/content-manager
+ */
+export declare const AudioElementLoader: (url: string) => Promise<HTMLAudioElement>;
