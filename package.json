@@ -1,6 +1,6 @@
 {
   "name": "@basementuniverse/audio-manager",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A component for playing audio (sound effects and music) in HTML5 games.",
   "author": "Gordon Larrigan <gordonlarrigan@gmail.com> (https://gordonlarrigan.com)",
   "license": "MIT",
