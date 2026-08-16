@@ -14,6 +14,16 @@ import {
 } from '@basementuniverse/audio-manager';
 ```
 
+For direct browser usage, load `build/index.js` with a `<script>` tag and use
+the namespaced global:
+
+```html
+<script src="build/index.js"></script>
+<script>
+	const audioManager = BasementUniverseAudioManager.AudioManager;
+</script>
+```
+
 ## AudioManager
 
 Static singleton entrypoint.

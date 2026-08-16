@@ -10,6 +10,12 @@ description: >
 
 Use this skill when working with `@basementuniverse/audio-manager`.
 
+The package publishes a UMD build. In bundlers such as webpack or Vite, use
+named imports from `@basementuniverse/audio-manager`. When loading the build with a
+browser `<script>` tag, use the `BasementUniverseAudioManager` global namespace,
+for example `BasementUniverseAudioManager.AudioManager`. The package does not
+publish a separate native ESM build.
+
 This library wraps Web Audio API primitives for common game-audio workflows:
 
 - Register named sounds (`HTMLAudioElement` or `AudioBuffer`)

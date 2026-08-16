@@ -30,6 +30,15 @@ AudioManager.initialise({
 });
 ```
 
+For direct browser usage, include the UMD build with a script tag:
+
+```html
+<script src="build/index.js"></script>
+```
+
+The build exposes its exports through the `BasementUniverseAudioManager` browser
+namespace. It does not add each export directly to `window`.
+
 ## Audio Item Options
 
 Each audio item should be of the following type:
